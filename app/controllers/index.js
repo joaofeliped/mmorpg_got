@@ -16,6 +16,8 @@ module.exports.autenticar = function(application, req, res) {
 		return;
 	}
 
+	dadosForm.usuario = dadosForm.usuario.trim();
+
 	var connection = application.config.dbConnection;
 	var UsuariosDAO = new application.app.models.UsuariosDAO(connection);
 

@@ -42,11 +42,30 @@
 						method: 'get',
 						success: function(data) {
 							$('#acoes').html(data);
+
+							clearTimeout(timerId);
+							cronometro();
 						}
 					})
 				});
 			});	
 
+			var timerId = null;
+
+			function cronometro() {
+				$('.tempo_restante').each(function(){
+					var segundos = $(this).html();
+					var segundos_atuais = segundos - 1;
+
+					if(segundos_atuais < 0) {
+						window.location.href = '/jogo?msg=acaoFinalizou';
+					} else {
+						$(this).html(segundos_atuais);
+					}
+				});
+
+				timerId = setTimeout('cronometro()', 1000);	
+			}
 		</script>
 
 	</head>
@@ -72,6 +91,18 @@
 	    	<% if(msg === 'sucesso') { %>
 	    		<div class="alert alert-info" id="msg_sucesso">
 	    			<strong>Ação realizada com sucesso.</strong>
+	    		</div>
+	    	<% } %>
+
+	    	<% if(msg === 'acaoFinalizou') { %>
+	    		<div class="alert alert-info" id="msg_sucesso">
+	    			<strong>Senhor, a atividade ordenada foi finalizada!</strong>
+	    		</div>
+	    	<% } %>
+
+	    	<% if(msg === 'ordemRevogada') { %>
+	    		<div class="alert alert-info" id="msg_sucesso">
+	    			<strong>Senhor, sua ordem foi revogada!</strong>
 	    		</div>
 	    	<% } %>
 	    	
@@ -130,7 +161,7 @@
 					
 					<div class="col-sm-2">
 						<img src="images/outros/moeda.jpg" title="Moeda" alt="Moeda"/>
-						<span>25</span>
+						<span><%= jogo.moeda %></span>
 					</div>
 					
 				</div>

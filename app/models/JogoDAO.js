@@ -1,3 +1,5 @@
+var ObjectID = require('mongodb').ObjectId;
+
 function JogoDAO(connection) {
 	this._connection = connection();
 }
@@ -39,7 +41,7 @@ JogoDAO.prototype.acao = function(acao) {
 
 			var tempo = null;
 
-			switch(acao.acao) {
+			switch(parseInt(acao.acao)) {
 				case 1:
 					tempo = 1 * 60 * 60000;
 				break;
@@ -59,17 +61,58 @@ JogoDAO.prototype.acao = function(acao) {
 
 			acao.acao_termina_em = date.getTime() + tempo;
 			collection.insert(acao);
-
-			mongoclient.close();
 		});
+
+		mongoclient.collection('jogo', function(err2, collection){
+
+			var moedas = null;
+			switch(parseInt(acao.acao)) {
+				case 1:
+					moedas = -2 * acao.quantidade;
+				break;
+
+				case 2:
+					moedas = -3 * acao.quantidade;
+				break;
+
+				case 3:
+					moedas = -1 * acao.quantidade;
+				break;
+
+				case 4:
+					moedas = -1 * acao.quantidade;
+				break;
+			}
+
+
+			collection.update({usuario: acao.usuario}, {$inc: {moeda: moedas}});
+			
+			mongoclient.close();			
+		});	
 	});
 }	
 
-JogoDAO.prototype.getAcoes = function(usuario) {
+JogoDAO.prototype.getAcoes = function(usuario, res) {
 	this._connection.open(function(err, mongoclient){
 		mongoclient.collection('acao', function(err2, collection){
-			collection.find({usuario: usuario}).toArray(function(err3, result){
-				console.log(result);
+
+			var date = new Date();
+			var momento_atual = date.getTime();
+
+			collection.find({usuario: usuario, acao_termina_em: {$gt: momento_atual}}).toArray(function(err3, result){
+				res.render('pergaminhos', {acoes: result});
+
+				mongoclient.close();
+			});
+		});
+	});
+}
+
+JogoDAO.prototype.revogarAcao = function(_id, res) {
+	this._connection.open(function(err, mongoclient){
+		mongoclient.collection('acao', function(err2, collection){
+			collection.remove({_id: ObjectID(_id)}, function(err, result){
+				res.redirect('jogo?msg=ordemRevogada');
 
 				mongoclient.close();
 			});
